@@ -1,0 +1,500 @@
+Abbey
+Airplane Cabin
+Airport Terminal
+Alley
+Amphitheater
+Amusement Arcade
+Amusement Park
+Anechoic Chamber
+Apartment Building Outdoor
+Apse Indoor
+Aquarium
+Aqueduct
+Arch
+Archive
+Arrival Gate Outdoor
+Art Gallery
+Art School
+Art Studio
+Assembly Line
+Athletic Field Outdoor
+Atrium Public
+Attic
+Auditorium
+Auto Factory
+Badlands
+Badminton Court Indoor
+Baggage Claim
+Bakery Shop
+Balcony Exterior
+Balcony Interior
+Ball Pit
+Ballroom
+Bamboo Forest
+Banquet Hall
+Bar
+Barn
+Barndoor
+Baseball Field
+Basement
+Basilica
+Basketball Court Outdoor
+Bathroom
+Batter’s Box
+Bayou
+Bazaar Indoor
+Bazaar Outdoor
+Beach
+Beauty Salon
+Bedroom
+Berth
+Bistro Indoor
+Boardwalk
+Boat Deck
+Boathouse
+Bookstore
+Booth Indoor
+Botanical Garden
+Bow Window Indoor
+Bow Window Outdoor
+Bowling Alley
+Boxing Ring
+Brewery Indoor
+Bridge
+Building Facade
+Bullring
+Burial Chamber
+Bus Interior
+Butcher’s Shop
+Butte
+Cabin Outdoor
+Cafeteria
+Campsite
+Campus
+Canal Natural
+Canal Urban
+Candy Store
+Canyon
+Car Interior Backseat
+Car Interior Frontseat
+Carousel
+Casino Indoor
+Castle
+Catacomb
+Cathedral Indoor
+Cathedral Outdoor
+Cavern Indoor
+Cemetery
+Chalet
+Cheese Factory
+Chemistry Lab
+Chicken Coop Indoor
+Chicken Coop Outdoor
+Child’s Room
+Church Indoor
+Church Outdoor
+Classroom
+Clean Room
+Cliff
+Cloister Indoor
+Biology Laboratory
+Clothing Store
+Coast
+Cockpit
+Coffee Shop
+Computer Room
+Conference Center
+Conference Room
+Construction Site
+Control Room
+Control Tower Outdoor
+Corn Field
+Corral
+Corridor
+Cottage Garden
+Courthouse
+Courtroom
+Courtyard
+Covered Bridge Exterior
+Creek
+Crevasse
+Crosswalk
+Cubicle Office
+Dam
+Delicatessen
+Dentist's Office
+Desert Sand
+Desert Vegetation
+Diner Indoor
+Diner Outdoor
+Dinette Home
+Dinette Vehicle
+Dining Car
+Dining Room
+Discotheque
+Dock
+Doorway Outdoor
+Dorm Room
+Driveway
+Driving Range Outdoor
+Drugstore
+Electrical Substation
+Elevator Door
+Elevator Interior
+Elevator Shaft
+Engine Room
+Escalator Indoor
+Excavation
+Factory Indoor
+Fairway
+Closet
+Field Cultivated
+Field Wild
+Fire Escape
+Fire Station
+Firing Range Indoor
+Fishpond
+Florist Shop Indoor
+Food Court
+Forest Broadleaf
+Forest Needleleaf
+Forest Path
+Forest Road
+Formal Garden
+Fountain
+Galley
+Game Room
+Garage Indoor
+Garbage Dump
+Gas Station
+Gazebo Exterior
+General Store Indoor
+General Store Outdoor
+Gift Shop
+Golf Course
+Greenhouse Indoor
+Greenhouse Outdoor
+Gymnasium Indoor
+Hangar Indoor
+Hangar Outdoor
+Harbor
+Hayfield
+Heliport
+Herb Garden
+Highway
+Hill
+Home Office
+Hospital
+Hospital Room
+Hot Spring
+Hot Tub Outdoor
+Hotel Outdoor
+Hotel Room
+House
+Hunting Lodge Outdoor
+Ice Cream Parlor
+Ice Floe
+Ice Shelf
+Ice Skating Rink Indoor
+Ice Skating Rink Outdoor
+Fast Food Restaurant
+Igloo
+Industrial Area
+Inn Outdoor
+Islet
+Jacuzzi Indoor
+Jail Indoor
+Jail Cell
+Jewelry Shop
+Kasbah
+Kennel Indoor
+Kennel Outdoor
+Kindergarten Classroom
+Kitchen
+Kitchenette
+Labyrinth Outdoor
+Lake Natural
+Landfill
+Landing Deck
+Laundromat
+Lecture Room
+Library Indoor
+Library Outdoor
+Lido Deck Outdoor
+Lift Bridge
+Lighthouse
+Limousine Interior
+Living Room
+Lobby
+Lock Chamber
+Locker Room
+Mansion
+Manufactured Home
+Market Indoor
+Market Outdoor
+Marsh
+Martial Arts Gym
+Mausoleum
+Medina
+Moat Water
+Monastery Outdoor
+Mosque Indoor
+Mosque Outdoor
+Motel
+Mountain
+Mountain Snowy
+Movie Theater Indoor
+Museum Indoor
+Music Store
+Music Studio
+Iceberg
+Nursery
+Oast House
+Observatory Outdoor
+Ocean
+Office
+Office Building
+Oil Refinery Outdoor
+Oilrig
+Operating Room
+Orchard
+Outhouse Outdoor
+Pagoda
+Palace
+Pantry
+Park
+Parking Garage Indoor
+Parking Garage Outdoor
+Parking Lot
+Parlor
+Pasture
+Patio
+Pavilion
+Pharmacy
+Phone Booth
+Physics Laboratory
+Picnic Area
+Pilothouse Indoor
+Planetarium Outdoor
+Playground
+Playroom
+Plaza
+Podium Indoor
+Podium Outdoor
+Pond
+Poolroom Establishment
+Poolroom Home
+Power Plant Outdoor
+Promenade Deck
+Pub Indoor
+Pulpit
+Putting Green
+Racecourse
+Raceway
+Raft
+Railroad Track
+Rainforest
+Reception
+Recreation Room
+Residential Neighborhood
+Nuclear Power Plant Outdoor
+Restaurant Kitchen
+Restaurant Patio
+Rice Paddy
+Riding Arena
+River
+Rock Arch
+Rope Bridge
+Ruin
+Runway
+Sandbar
+Sandbox
+Sauna
+Schoolhouse
+Sea Cliff
+Server Room
+Shed
+Shoe Shop
+Shopfront
+Shopping Mall Indoor
+Shower
+Skatepark
+Ski Lodge
+Ski Resort
+Ski Slope
+Sky
+Skyscraper
+Slum
+Snowfield
+Squash Court
+Stable
+Stadium Baseball
+Stadium Football
+Stage Indoor
+Staircase
+Street
+Subway Interior
+Subway Station Platform
+Supermarket
+Sushi Bar
+Swamp
+Swimming Pool Indoor
+Swimming Pool Outdoor
+Synagogue Indoor
+Synagogue Outdoor
+Television Studio
+Temple East Asia
+Temple South Asia
+Tennis Court Indoor
+Tennis Court Outdoor
+Restaurant
+Theater Indoor Proscenium
+Theater Indoor Seats
+Thriftshop
+Throne Room
+Ticket Booth
+Toll Plaza
+Topiary Garden
+Tower
+Toyshop
+Track Outdoor
+Train Railway
+Train Station Platform
+Tree Farm
+Tree House
+Trench
+Underwater Coral Reef
+Utility Room
+Valley
+Van Interior
+Vegetable Garden
+Veranda
+Veterinarian's Office
+Viaduct
+Videostore
+Village
+Vineyard
+Volcano
+Volleyball Court Indoor
+Volleyball Court Outdoor
+Waiting Room
+Warehouse Indoor
+Water Tower
+Waterfall Block
+Waterfall Fan
+Waterfall Plunge
+Watering Hole
+Wave
+Wet Bar
+Wheat Field
+Wind Farm
+Windmill
+Wine Cellar Barrel Storage
+Wine Cellar Bottle Storage
+Wrestling Ring Indoor
+Yard
+Youth Hostel
+Tent Outdoor
+Apple
+Aquarium Fish
+Baby
+Bear
+Beaver
+Bed
+Bee
+Beetle
+Bicycle
+Bottle
+Food Bowl
+Boy Portrait
+Bridge
+Bus
+Butterfly
+Camel
+Can
+Castle
+Caterpillar
+Cattle
+Chair
+Chimpanzee
+Clock
+Cloud
+Cockroach
+Couch
+Crab
+Crocodile
+Cup of Tea
+Dinosaur
+Dolphin
+Elephant
+Flatfish
+Forest
+Fox
+Girl Portrait
+Hamster
+House
+Kangaroo
+Keyboard
+Lamp
+Lawn Mower
+Leopard
+Lion
+Lizard
+Lobster
+Man Portrait
+Maple Tree
+Motorcycle
+Mountain
+Mouse
+Mushroom
+Oak Tree
+Orange
+Orchid
+Otter
+Palm Tree
+Pear
+Pickup Truck
+Pine Tree
+Plain
+Plate
+Poppy
+Porcupine
+Possum
+Rabbit
+Raccoon
+Ray
+Road
+Rocket
+Rose
+Sea
+Seal
+Shark
+Shrew
+Skunk
+Skyscraper
+Snail
+Snake
+Spider
+Squirrel
+Streetcar
+Sunflower
+Sweet Pepper
+Table
+Tank
+Telephone
+Television
+Tiger
+Tractor
+Train
+Trout
+Tulip
+Turtle
+Wardrobe
+Whale
+Willow Tree
+Wolf
+Woman Portrait
+Worm
+Cat
+Dog
+Horse
