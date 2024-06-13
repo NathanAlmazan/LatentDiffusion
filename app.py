@@ -6,7 +6,6 @@ import numpy as np
 from PIL import Image
 from diffusion.vae import Decoder
 from diffusion.unet import Diffusion
-from fastprogress import progress_bar
 from diffusion.sampler import KLMSSampler
 from flask import Flask, request, jsonify, send_from_directory
 
@@ -46,7 +45,7 @@ def label_generate():
         diffusion.eval()
 
         with torch.autocast('cuda') and torch.inference_mode():
-            for timestep in progress_bar(sampler.time_steps, leave=False):
+            for timestep in sampler.time_steps:
                 input_latents = latents * sampler.get_input_scale()
                 time_embedding = sampler.get_time_embedding(timestep).float().cuda()
                 output = diffusion(input_latents, embeddings, time_embedding)
