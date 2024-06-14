@@ -1,6 +1,11 @@
+import os
+import copy
 import torch
+import torchvision
+import numpy as np
+import matplotlib.pyplot as plt
 
-from diffusion.attn import SelfAttention, CrossAttention
+from attn import SelfAttention, CrossAttention
 
 
 class TimeEmbedding(torch.nn.Module):
@@ -191,11 +196,193 @@ class Diffusion(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.time_embedding = TimeEmbedding(320)
+        self.label_embedding = torch.nn.Embedding(500, 768)
         self.unet = UNet()
         self.final = FinalLayer(320, 4)
 
     def forward(self, latent, context, time):
         time = self.time_embedding(time)
+        context = self.label_embedding(context)
+
         output = self.unet(latent, context, time)
         output = self.final(output)
         return output
+
+
+class EMA:
+    def __init__(self, beta):
+        super().__init__()
+        self.beta = beta
+        self.step = 0
+
+    def update_model_average(self, ma_model: torch.nn.Module, current_model: torch.nn.Module):
+        for current_params, ma_params in zip(current_model.parameters(), ma_model.parameters()):
+            old_weight, up_weight = ma_params.data, current_params.data
+            ma_params.data = self.update_average(old_weight, up_weight)
+
+    def update_average(self, old, new):
+        if old is None:
+            return new
+        return old * self.beta + (1 - self.beta) * new
+
+    def step_ema(self, ema_model, model, step_start_ema=2000):
+        if self.step < step_start_ema:
+            self.reset_parameters(ema_model, model)
+            self.step += 1
+            return
+        self.update_model_average(ema_model, model)
+        self.step += 1
+
+    @staticmethod
+    def reset_parameters(ema_model: torch.nn.Module, model: torch.nn.Module):
+        ema_model.load_state_dict(model.state_dict())
+
+
+class Trainer:
+    def __init__(self,
+                 noise_steps=1000,
+                 beta_start=1e-4,
+                 beta_end=0.02,
+                 epochs=100,
+                 learning_rate=5e-3,
+                 train_dataloader=None,
+                 val_dataloader=None):
+        self.noise_steps = noise_steps
+        self.beta_start = beta_start
+        self.beta_end = beta_end
+
+        self.epochs = epochs
+        self.beta = self.prepare_noise_schedule().cuda()
+        self.alpha = 1. - self.beta
+        self.alpha_hat = torch.cumprod(self.alpha, dim=0)
+
+        self.model = Diffusion().cuda()
+        self.ema_model = copy.deepcopy(self.model).eval().requires_grad_(False)
+
+        self.train_dataloader = train_dataloader
+        self.val_dataloader = val_dataloader
+        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=learning_rate, eps=1e-5)
+        self.scheduler = torch.optim.lr_scheduler.OneCycleLR(self.optimizer, max_lr=learning_rate,
+                                                             steps_per_epoch=10, epochs=epochs)
+        self.mse = torch.nn.MSELoss()
+        self.ema = EMA(0.995)
+        self.scaler = torch.cuda.amp.GradScaler()
+
+    def get_num_parameters(self):
+        return sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+
+    def prepare_noise_schedule(self):
+        return torch.linspace(self.beta_start, self.beta_end, self.noise_steps)
+
+    def sample_time_steps(self, n):
+        return torch.randint(low=1, high=self.noise_steps, size=(n,))
+
+    def noise_images(self, x: torch.Tensor, t: torch.Tensor):
+        # Add noise to images at step t
+        eps = torch.randn_like(x)
+        sqrt_alpha_hat = torch.sqrt(self.alpha_hat[t])[:, None, None, None]
+        sqrt_one_minus_alpha_hat = torch.sqrt(1 - self.alpha_hat[t])[:, None, None, None]
+        return sqrt_alpha_hat * x + sqrt_one_minus_alpha_hat * eps, eps
+
+    @torch.inference_mode()
+    def sample(self, use_ema, labels, cfg_scale=3):
+        model = self.ema_model if use_ema else self.model
+        n = len(labels)
+        print(f"Sampling {n} new images....")
+        model.eval()
+        with torch.inference_mode():
+            x = torch.randn((n, 4, 64, 64)).cuda()
+            for i in reversed(range(1, self.noise_steps)):
+                t = (torch.ones(n) * i).long().cuda()
+                predicted_noise = model(x, t, labels)
+                if cfg_scale > 0:
+                    predicted_noise = torch.lerp(model(x, t, None), predicted_noise, cfg_scale)
+                alpha = self.alpha[t][:, None, None, None]
+                alpha_hat = self.alpha_hat[t][:, None, None, None]
+                beta = self.beta[t][:, None, None, None]
+                if i > 1:
+                    noise = torch.randn_like(x)
+                else:
+                    noise = torch.zeros_like(x)
+                x = 1 / torch.sqrt(alpha) * (
+                            x - ((1 - alpha) / (torch.sqrt(1 - alpha_hat))) * predicted_noise) + torch.sqrt(
+                    beta) * noise
+        # rescale image
+        x = (x.clamp(-1, 1) + 1) / 2
+        x = (x * 255).type(torch.uint8)
+        return x
+
+    def train_step(self, loss):
+        self.optimizer.zero_grad()
+        self.scaler.scale(loss).backward()
+        self.scaler.step(self.optimizer)
+        self.scaler.update()
+        self.ema.step_ema(self.ema_model, self.model)
+        self.scheduler.step()
+
+    def one_epoch(self, train=True):
+        avg_loss = 0.
+
+        if train:
+            self.model.train()
+            p_bar = self.train_dataloader
+        else:
+            self.model.eval()
+            p_bar = self.val_dataloader
+
+        for i, (images, labels) in enumerate(p_bar):
+            with torch.autocast("cuda") and (torch.inference_mode() if not train else torch.enable_grad()):
+                images = images.cuda()
+                labels = labels.cuda()
+                t = self.sample_time_steps(images.shape[0]).cuda()
+                x_t, noise = self.noise_images(images, t)
+                if np.random.random() < 0.1:
+                    labels = None
+                predicted_noise = self.model(x_t, t, labels)
+                loss = self.mse(noise, predicted_noise)
+                avg_loss += loss
+            if train:
+                self.train_step(loss)
+                p_bar.comment = f"train_mse: {loss.item():.2e}, learning_rate: {self.scheduler.get_last_lr()[0]:.2e}"
+
+        avg_loss /= len(p_bar)
+        return avg_loss
+
+    def log_images(self):
+        labels = torch.arange(np.random.randint(0, 500, size=(8,))).long().cuda()
+        sampled_images = self.sample(use_ema=False, labels=labels)
+        sample_grid = torchvision.utils.make_grid(sampled_images, nrow=4)
+
+        plt.imshow(sample_grid.cpu().permute(1, 2, 0).numpy(), vmin=0., vmax=1.)
+        plt.axis('off')
+        plt.show()
+
+        # EMA model sampling
+        ema_sampled_images = self.sample(use_ema=True, labels=labels)
+        ema_sample_grid = torchvision.utils.make_grid(ema_sampled_images, nrow=4)
+
+        plt.imshow(ema_sample_grid.cpu().permute(1, 2, 0).numpy(), vmin=0., vmax=1.)
+        plt.axis('off')
+        plt.show()
+
+    def save_model(self, save_path=None):
+        torch.save(self.model.state_dict(), os.path.join(save_path, "diffusion.pt"))
+        torch.save(self.ema_model.state_dict(), os.path.join(save_path, "ema_diffusion.pt"))
+
+    def load_model(self, save_path=None):
+        self.model.load_state_dict(torch.load(os.path.join(save_path, "diffusion.pt")))
+        self.ema_model.load_state_dict(torch.load(os.path.join(save_path, "ema_diffusion.pt")))
+
+    def fit(self, log_every_epoch=10, do_validation=False):
+        for epoch in range(self.epochs):
+            loss = self.one_epoch(train=True)
+            print(f"Epoch {epoch + 1}/{self.epochs}:", loss)
+
+            # validation
+            if do_validation and self.val_dataloader is not None:
+                avg_loss = self.one_epoch(train=False)
+                print("val_mse:", avg_loss)
+
+            if (epoch + 1) % log_every_epoch == 0:
+                self.log_images()  # log predictions
+                self.save_model()  # save model

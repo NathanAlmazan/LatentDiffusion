@@ -1,6 +1,10 @@
+import os
 import torch
+import torchvision
+import matplotlib.pyplot as plt
 
-from diffusion.attn import SelfAttention
+from attn import SelfAttention
+from fastprogress import progress_bar
 
 
 class AttentionBlock(torch.nn.Module):
@@ -90,7 +94,6 @@ class Encoder(torch.nn.Sequential):
         stdev = variance.sqrt()
         x = mean + stdev * noise
 
-        x *= 0.18215
         return x
 
 
@@ -126,7 +129,100 @@ class Decoder(torch.nn.Sequential):
         )
 
     def forward(self, x):
-        x /= 0.18215
         for module in self:
             x = module(x)
         return x
+
+
+class Trainer:
+    def __init__(self, dataloader):
+        # initialize dataset
+        self.dataloader = dataloader
+        # initialize variational autoencoder
+        self.encoder = Encoder().float().cuda()
+        self.decoder = Decoder().float().cuda()
+
+    @staticmethod
+    def loss_fn(recon_x, x, mean, log_var):
+        mse = torch.nn.functional.mse_loss(recon_x, x, size_average=False)
+        kld = -0.5 * torch.mean(1 + log_var - torch.pow(mean, 2) - torch.exp(log_var))
+        loss = 500 * mse + kld
+
+        return loss, mse, kld
+
+    def log_images(self, batch):
+        self.encoder.eval()
+        self.decoder.eval()
+        with torch.autocast("cuda") and torch.inference_mode():
+            sample_images = batch.cuda()
+            mean, z_log_var, z = self.encoder(sample_images)
+            reconstructed = self.decoder(z)
+            reconstructed = (reconstructed.clamp(-1, 1) + 1) / 2
+            reconstructed = (reconstructed * 255).type(torch.uint8)
+
+        # grid samples
+        image_grid = torchvision.utils.make_grid(reconstructed[:8], padding=0).cpu()
+        image_grid = image_grid.permute(1, 2, 0).numpy()
+
+        # display a reconstructed images
+        plt.figure(figsize=(16, 12))
+        plt.imshow(image_grid)
+        plt.axis('off')
+        plt.show()
+
+    def train(self, epochs, lr=5e-3, eps=1e-5, verbose=True, checkpoint=None, save_path=None):
+        # initialize optimizers
+        scaler = torch.cuda.amp.GradScaler()
+        optimizer = torch.optim.AdamW(list(self.encoder.parameters()) + list(self.decoder.parameters()), lr=lr,
+                                      eps=eps)
+        scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=lr,
+                                                        steps_per_epoch=len(self.dataloader), epochs=epochs)
+
+        # load checkpoint to continue training (optional)
+        if checkpoint:
+            self.encoder.load_state_dict(torch.load(os.path.join(checkpoint, "encoder.pt")))
+            self.decoder.load_state_dict(torch.load(os.path.join(checkpoint, "decoder.pt")))
+
+        for epoch in range(epochs):
+            # set model in train mode
+            self.encoder.train()
+            self.decoder.train()
+            # track model performance
+            avg_loss = 0.
+            avg_kl_loss = 0.
+            avg_reconstruction_loss = 0.
+            # iterate over batches
+            dataset = progress_bar(self.dataloader, leave=False) if verbose else self.dataloader
+            for image, _ in dataset:
+                image = image.cuda()  # move image to gpu
+                # enable mixed precision calculation
+                with torch.autocast("cuda") and torch.enable_grad():
+                    # forward pass
+                    z_mean, z_log_var, z = self.encoder(image)
+                    reconstruction = self.decoder(z)
+                    # calculate loss
+                    loss, mse, kld = self.loss_fn(reconstruction, image, z_mean, z_log_var)
+                # backward pass
+                optimizer.zero_grad()
+                scaler.scale(loss).backward()
+                scaler.step(optimizer)
+                scaler.update()
+                scheduler.step()
+                # logger
+                avg_loss += loss
+                avg_kl_loss += kld
+                avg_reconstruction_loss += mse
+            # log average loss
+            avg_loss /= len(self.dataloader)
+            avg_kl_loss /= len(self.dataloader)
+            avg_reconstruction_loss /= len(self.dataloader)
+            print(
+                f"Epoch {epoch + 1}/{epochs} - total_loss: {avg_loss:.2e}, reconstruction_loss: {avg_reconstruction_loss:.2e}, kl_loss: {avg_kl_loss:.2e}")
+
+            if (epoch + 1) % 10 == 0:
+                # view reconstructed images
+                self.log_images(next(iter(self.dataloader)))
+                # save checkpoint
+                if save_path:
+                    torch.save(self.encoder.state_dict(), os.path.join(save_path, "encoder.pt"))
+                    torch.save(self.decoder.state_dict(), os.path.join(save_path, "decoder.pt"))

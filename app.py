@@ -4,9 +4,9 @@ import torch
 import numpy as np
 
 from PIL import Image
-from diffusion.vae import Decoder
-from diffusion.unet import Diffusion
-from diffusion.sampler import KLMSSampler
+from model.vae import Decoder
+from model.unet import Diffusion
+from model.sampler import KLMSSampler
 from flask import Flask, request, jsonify, send_from_directory
 
 app = Flask(__name__)
@@ -28,27 +28,23 @@ def label_generate():
         if len([label for label in labels if label < 0 or label > 500]) > 0:
             return jsonify({'error': 'Label does not exist.'}), 400
 
-        # get label embeddings
-        embeddings = np.load(os.path.join('transformer', 'checkpoint', 'embeddings.npy'), allow_pickle=True)
-        embeddings = torch.from_numpy(embeddings[labels])
-        embeddings = embeddings.float().cuda()
-
         # generate initial noise
         sampler = KLMSSampler(n_inference_steps=50)
         latents = torch.randn((len(labels), 4, 64, 64))
         latents *= sampler.initial_scale
         latents = latents.float().cuda()
+        labels = torch.tensor(labels).long().cuda()
 
         # denoise image using diffusion model
         diffusion = Diffusion().cuda()
-        diffusion.load_state_dict(torch.load(os.path.join('diffusion', 'checkpoint', 'diffusion.pt')))
+        diffusion.load_state_dict(torch.load(os.path.join('model', 'checkpoint', 'model.pt')))
         diffusion.eval()
 
         with torch.autocast('cuda') and torch.inference_mode():
             for timestep in sampler.time_steps:
                 input_latents = latents * sampler.get_input_scale()
                 time_embedding = sampler.get_time_embedding(timestep).float().cuda()
-                output = diffusion(input_latents, embeddings, time_embedding)
+                output = diffusion(input_latents, labels, time_embedding)
 
                 latents = sampler.step(latents, output)
 
@@ -59,7 +55,7 @@ def label_generate():
 
         # decode latent space to image
         decoder = Decoder().cuda()
-        decoder.load_state_dict(torch.load(os.path.join('diffusion', 'checkpoint', 'decoder.pt')))
+        decoder.load_state_dict(torch.load(os.path.join('model', 'checkpoint', 'decoder.pt')))
         decoder.eval()
 
         with torch.autocast('cuda') and torch.inference_mode():
